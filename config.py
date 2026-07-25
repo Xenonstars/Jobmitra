@@ -44,10 +44,16 @@ class Settings(BaseSettings):
     REDIS_SESSION_TTL: int = 604800  # 7 days
 
     # =====================
-    # LLM (Ollama - Local Models)
+    # LLM provider settings
     # =====================
-    LLM_PROVIDER: str = "ollama"  # 'ollama' or 'anthropic'
+    LLM_PROVIDER: str = "ollama"  # 'ollama', 'groq', or 'anthropic'
+
+    # Ollama settings (local)
     OLLAMA_BASE_URL: str = "http://localhost:11434"
+
+    # GROQ settings (cloud)
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    GROQ_API_KEY: Optional[str] = None
 
     # Primary model — used for tailored resume + cover letter generation
     LLM_MODEL: str = "deepseek-r1:8b"
@@ -166,6 +172,10 @@ if settings.is_production:
         assert (
             settings.ANTHROPIC_API_KEY
         ), "ANTHROPIC_API_KEY must be set when LLM_PROVIDER=anthropic"
+    if settings.LLM_PROVIDER == "groq":
+        assert (
+            settings.GROQ_API_KEY
+        ), "GROQ_API_KEY must be set when LLM_PROVIDER=groq"
     assert (
         "sqlite" not in settings.DATABASE_URL
     ), "SQLite not allowed in production (use PostgreSQL)"

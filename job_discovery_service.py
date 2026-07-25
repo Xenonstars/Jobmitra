@@ -53,7 +53,7 @@ class BaseJobCrawler(ABC):
         local LLM to extract job fields. This handles site layout changes
         without requiring selector updates.
         """
-        import ollama
+        from llm_client import llm_chat
         from config import settings
 
         prompt = f"""You are a data extraction assistant. Below is the visible text from a job board ({board_name}) search results page.
@@ -70,12 +70,13 @@ PAGE TEXT:
 {page_text[:8000]}"""
 
         try:
-            response = ollama.chat(
+            response_text = llm_chat(
+                prompt=prompt,
                 model=settings.FAST_LLM_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                options={"num_predict": 2000, "temperature": 0.0},
+                max_tokens=2000,
+                temperature=0.0,
             )
-            text = response["message"]["content"]
+            text = response_text
             if "```json" in text:
                 text = text.split("```json")[1].split("```")[0]
             elif "```" in text:

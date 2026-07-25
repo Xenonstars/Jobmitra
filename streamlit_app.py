@@ -22,230 +22,207 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Glassmorphism + Futuristic Theme ──────────────────────────────────────────
+# ── Clean Dark Theme (no glassmorphism) ──────────────────────────────────────
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-* { font-family: 'Inter', sans-serif; }
-
-/* Animated gradient background */
-.stApp {
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+:root {
+    color-scheme: dark;
+    font-family: 'Inter', sans-serif !important;
+    background: #08112a !important;
+    color: #e6efff !important;
 }
 
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+html, body, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
+    background: #08112a !important;
+    color: #e6efff !important;
 }
 
-/* Glass card */
-.glass {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 20px;
-    padding: 1.5rem;
-    margin-bottom: 1.2rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-.glass:hover {
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(255, 255, 255, 0.18);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* Glass card compact for job items */
-.glass-job {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 14px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 0.75rem;
-    transition: all 0.25s ease;
-}
-.glass-job:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.13);
-}
-
-/* Score badges */
-.score-high {
-    background: linear-gradient(135deg, #00f260, #0575e6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-    font-size: 1.2rem;
-}
-.score-mid {
-    background: linear-gradient(135deg, #f7971e, #ffd200);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-    font-size: 1.2rem;
-}
-.score-low {
-    background: linear-gradient(135deg, #ff416c, #ff4b2b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-    font-size: 1.2rem;
-}
-
-/* Metric cards */
-div[data-testid="metric-container"] {
-    background: rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 16px !important;
-    padding: 1rem 1.2rem !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
-}
-div[data-testid="metric-container"] label {
-    color: rgba(255,255,255,0.7) !important;
-    font-weight: 500 !important;
-}
-div[data-testid="metric-container"] div[data-testid="metric-value"] {
-    color: #fff !important;
-    font-weight: 700 !important;
-}
-
-/* Sidebar */
 section[data-testid="stSidebar"] {
-    background: rgba(15, 12, 41, 0.85) !important;
-    backdrop-filter: blur(24px) !important;
-    -webkit-backdrop-filter: blur(24px) !important;
-    border-right: 1px solid rgba(255,255,255,0.06) !important;
+    background: #071025 !important;
+    color: #e6efff !important;
+    border-right: 1px solid #112f6e !important;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    transform: translateX(0) !important;
+    left: 0 !important;
 }
+
 section[data-testid="stSidebar"] .stRadio label {
-    color: rgba(255,255,255,0.75) !important;
-    font-weight: 500 !important;
-    padding: 0.4rem 0.8rem !important;
+    color: #c9d9f8 !important;
     border-radius: 10px !important;
-    transition: all 0.2s;
 }
 section[data-testid="stSidebar"] .stRadio label:hover {
-    background: rgba(255,255,255,0.06);
-    color: #fff !important;
+    background: #0f1f59 !important;
+    color: #ffffff !important;
 }
 section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label[data-checked="true"] {
-    background: linear-gradient(135deg, rgba(0, 242, 96, 0.2), rgba(5, 117, 230, 0.2)) !important;
-    border: 1px solid rgba(0, 242, 96, 0.3) !important;
-    color: #fff !important;
+    background: #122d6f !important;
+    color: #ffffff !important;
+    border-color: #1f4f94 !important;
 }
 
-/* Headings */
-h1, h2, h3 {
-    color: #fff !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.02em;
+[data-testid="stToolbar"] {
+    display: none !important;
 }
 
-/* Buttons */
+button[data-testid="stBaseButton-headerNoPadding"], button[data-testid="baseButton-header"] {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: inline-flex !important;
+    font-size: 0.9rem !important;
+    min-width: 2.4rem !important;
+    width: auto !important;
+    padding: 0.3rem 0.55rem !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: none !important;
+    color: #e6efff !important;
+}
+button[data-testid="stBaseButton-headerNoPadding"] svg,
+button[data-testid="baseButton-header"] svg {
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    fill: #e6efff !important;
+}
+
 .stButton button {
-    background: linear-gradient(135deg, rgba(0, 242, 96, 0.15), rgba(5, 117, 230, 0.15)) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: #112869 !important;
+    border: 1px solid #1f4d95 !important;
+    color: #f5faff !important;
     border-radius: 12px !important;
-    color: #fff !important;
-    font-weight: 600 !important;
-    transition: all 0.3s ease !important;
 }
 .stButton button:hover {
-    background: linear-gradient(135deg, rgba(0, 242, 96, 0.3), rgba(5, 117, 230, 0.3)) !important;
-    border-color: rgba(0, 242, 96, 0.4) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(0, 242, 96, 0.15) !important;
+    background: #17438f !important;
+    border-color: #2d6be0 !important;
 }
 
-/* Apply to all special button */
-.stButton button[data-testid="baseButton-secondary"] {
-    background: linear-gradient(135deg, #00f260, #0575e6) !important;
-    border: none !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px;
-}
-
-/* Text inputs */
-input, textarea, select, div[data-baseweb="select"] > div {
-    background: rgba(255,255,255,0.06) !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 12px !important;
-    color: #fff !important;
+input, textarea, select, div[data-baseweb="select"] > div, .stTextInput>div>div>input, .stNumberInput>div>div>input, .stTextArea>div>div>textarea {
+    background: #0e1d4b !important;
+    border: 1px solid #1f4490 !important;
+    color: #eef3ff !important;
+    border-radius: 10px !important;
 }
 input::placeholder, textarea::placeholder {
-    color: rgba(255,255,255,0.35) !important;
+    color: #9eb0d4 !important;
 }
 
-/* Loader spinners */
-div[data-testid="stSpinner"] {
-    color: #00f260 !important;
+input[type="range"] {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 100% !important;
+    height: 10px !important;
+    background: #1c3170 !important;
+    border-radius: 999px !important;
+    outline: none !important;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    background: #00f471 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+    cursor: pointer !important;
+}
+input[type="range"]::-moz-range-thumb {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    background: #00f471 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+    cursor: pointer !important;
+}
+input[type="range"]::-ms-thumb {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    background: #00f471 !important;
+    border: 2px solid #ffffff !important;
+    cursor: pointer !important;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+    height: 10px !important;
+    border-radius: 999px !important;
+    background: #1c3170 !important;
+}
+input[type="range"]::-moz-range-track {
+    height: 10px !important;
+    border-radius: 999px !important;
+    background: #1c3170 !important;
+}
+input[type="range"]::-ms-track {
+    height: 10px !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    color: transparent !important;
 }
 
-/* Filter pills */
-div[data-testid="stHorizontalBlock"] div[data-testid="column"] button {
-    border-radius: 50px !important;
-    padding: 0.3rem 1.2rem !important;
-    font-size: 0.85rem;
+div[data-testid="metric-container"], .stMetric {
+    background: #101f43 !important;
+    border: 1px solid #1f4d92 !important;
+    border-radius: 14px !important;
 }
 
-/* Tables/Dataframes */
+.streamlit-expanderHeader {
+    background: #111f4f !important;
+    border: 1px solid #1f4a95 !important;
+    color: #eef3ff !important;
+}
+.streamlit-expanderContent {
+    background: #081229 !important;
+    border: 1px solid #1f4a95 !important;
+}
+
 div[data-testid="stDataFrame"] {
     background: transparent !important;
 }
-div[data-testid="stDataFrame"] td {
-    color: rgba(255,255,255,0.8) !important;
-    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+div[data-testid="stDataFrame"] td, div[data-testid="stDataFrame"] th {
+    color: #e7f0ff !important;
+    border-color: #1a2c5f !important;
 }
 
-/* Tabs */
-div[data-testid="stTabs"] button {
-    color: rgba(255,255,255,0.5) !important;
-    border-bottom: 2px solid transparent !important;
-}
-div[data-testid="stTabs"] button[aria-selected="true"] {
-    color: #00f260 !important;
-    border-bottom: 2px solid #00f260 !important;
+.stAlert, .stWarning, .stError, .stInfo, .stSuccess {
+    background: #0d193f !important;
+    border: 1px solid #1f4d90 !important;
+    color: #eef3ff !important;
 }
 
-/* Status badges */
+h1,h2,h3,h4,h5,h6 {
+    color: #f4f9ff !important;
+}
+
+p, span, label, div, li, a {
+    color: #d8e4ff !important;
+}
+
 .status-badge {
-    display: inline-block;
-    padding: 0.2rem 0.7rem;
-    border-radius: 50px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.2rem 0.65rem !important;
+    border-radius: 999px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
 }
-.status-submitted { background: rgba(0, 242, 96, 0.15); color: #00f260; }
-.status-applying { background: rgba(5, 117, 230, 0.15); color: #5b9eff; }
-.status-interview { background: rgba(247, 151, 30, 0.15); color: #f7971e; }
-.status-offer { background: rgba(0, 242, 96, 0.2); color: #00f260; }
-.status-rejected { background: rgba(255, 65, 108, 0.15); color: #ff416c; }
-.status-failed { background: rgba(255, 65, 108, 0.1); color: #ff6b6b; }
-.status-discovered { background: rgba(255, 255, 255, 0.05); color: rgba(255,255,255,0.5); }
+
+.score-high { color: #00f471 !important; }
+.score-mid { color: #f7b744 !important; }
+.score-low { color: #ff707f !important; }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-/* Spacing */
-.block-container { padding-top: 1.5rem !important; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #08112a; }
+::-webkit-scrollbar-thumb { background: #1c3678; border-radius: 999px; }
 </style>
 """, unsafe_allow_html=True)
+
 
 # ── API Helpers ───────────────────────────────────────────────────────────────
 
@@ -261,7 +238,13 @@ def api_post(path, data=None, files=None):
     try:
         to = 120 if path in ("/jobs/search", "/jobs/match", "/applications/apply") else 30
         if files:
-            r = requests.post(f"{API_BASE}{API_PREFIX}{path}", files=files, timeout=to)
+            prepared_files = {}
+            for key, value in (files or {}).items():
+                if hasattr(value, "read") and hasattr(value, "name"):
+                    prepared_files[key] = (value.name, value, getattr(value, "type", "application/octet-stream"))
+                else:
+                    prepared_files[key] = value
+            r = requests.post(f"{API_BASE}{API_PREFIX}{path}", files=prepared_files, timeout=to)
         else:
             r = requests.post(f"{API_BASE}{API_PREFIX}{path}", json=data, timeout=to)
         r.raise_for_status(); return r.json()
@@ -407,7 +390,7 @@ def page_dashboard():
     st.markdown("")
 
     # ── Application Timeline ──────────────────────────────────────────────
-    st.markdown('<div class="glass"><h3>📅 Application Timeline</h3>', unsafe_allow_html=True)
+    st.markdown('<div><h3>📅 Application Timeline</h3>', unsafe_allow_html=True)
 
     if all_apps:
         rows = []
@@ -431,7 +414,7 @@ def page_dashboard():
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Category Breakdown ─────────────────────────────────────────────────
-    st.markdown('<div class="glass"><h3>📊 Category Breakdown</h3>', unsafe_allow_html=True)
+    st.markdown('<div><h3>📊 Category Breakdown</h3>', unsafe_allow_html=True)
     cats = {"Product-Based": 0, "Service-Based": 0, "Startups": 0, "General": 0}
     for j in all_jobs:
         c = categorize_job(j.get("title",""), j.get("company",""), "")
@@ -446,7 +429,7 @@ def page_dashboard():
 
     # ── Quick Apply: Top Jobs ──────────────────────────────────────────────
     if st.session_state.matched:
-        st.markdown('<div class="glass"><h3>🏆 Top Matched Jobs — Quick Apply</h3>', unsafe_allow_html=True)
+        st.markdown('<div><h3>🏆 Top Matched Jobs — Quick Apply</h3>', unsafe_allow_html=True)
 
         category_filter = st.segmented_control(
             "Filter", ["All", "Product-Based", "Service-Based", "Startups", "General"],
@@ -556,8 +539,6 @@ def page_resume():
     data = api_get("/resume/")
     resumes = data.get("resumes", [])
 
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
-
     if not resumes:
         st.markdown("### Upload Your Resume")
         uploaded = st.file_uploader("PDF or DOCX", type=["pdf", "docx"], label_visibility="collapsed")
@@ -580,9 +561,12 @@ def page_resume():
         if c1.button("📥 Upload New"): st.session_state.resume_id = None; st.session_state.resume = None; st.rerun()
         if c2.button("🗑️ Delete"): api_delete(f"/resume/{sel}"); st.session_state.resume_id = None; st.session_state.resume = None; st.rerun()
 
-        if detail.get("content"):
+        content = detail.get("content") or detail.get("content_preview") or ""
+        if content:
             with st.expander("📄 Preview", expanded=True):
-                st.text_area("", detail["content"], height=300, label_visibility="collapsed")
+                st.text_area("", content, height=300, label_visibility="collapsed")
+        else:
+            st.info("Resume uploaded, but no preview text could be extracted from this file.")
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -595,7 +579,6 @@ def page_search():
         st.warning("Upload a resume first.")
         return
 
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
         kw = st.text_input("Keywords (comma-separated)", "Senior Engineer, Python")
@@ -645,7 +628,6 @@ def page_apps():
     apps = data.get("applications", [])
     st.session_state.applications = apps
 
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     statuses = ["All"] + sorted(set(a.get("status","") for a in apps))
     sf = c1.selectbox("Status", statuses)
@@ -690,13 +672,24 @@ def page_apps():
 
 def page_settings():
     st.markdown('<h1>⚙️ Settings</h1>', unsafe_allow_html=True)
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
     st.markdown("### 🔗 Backend")
     st.code(f"{API_BASE}")
     st.markdown("🟢 Connected" if backend_ok else "🔴 Offline")
     st.markdown("---")
-    st.markdown("### 🧠 LLM — DeepSeek-R1 8B (Ollama)")
-    st.code("ollama list")
+
+    # Read LLM provider from backend health/config
+    try:
+        cfg = requests.get(f"{API_BASE}/health", timeout=5).json()
+    except Exception:
+        cfg = {}
+    provider = cfg.get("llm_provider", "ollama")
+    model = cfg.get("llm_model", "deepseek-r1:8b")
+    st.markdown(f"### 🧠 LLM — {model}")
+    st.write(f"**Provider:** {provider.upper()}")
+    if provider == "groq":
+        st.code("https://console.groq.com")
+    else:
+        st.code("ollama list")
     st.markdown("---")
     st.markdown("### ⚙️ Preferences")
     c1, c2 = st.columns(2)

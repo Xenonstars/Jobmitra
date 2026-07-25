@@ -7,10 +7,10 @@ import json
 from typing import List, Optional
 
 import structlog
-import ollama
 
 from config import settings
 from job_discovery_service import JobListing
+from llm_client import llm_chat
 from llm_schemas import validate_job_scores, validate_requirements, JobScoreList, ExtractedRequirements
 from llm_cache import get as cache_get, set as cache_set
 
@@ -42,20 +42,17 @@ def _sanitize_untrusted(content: str, label: str = "DATA") -> str:
 
 
 def _call_llm(prompt: str, max_tokens: int = None) -> str:
-    """Call the local Ollama model and return cleaned text."""
+    """Call the configured LLM provider and return cleaned text."""
     try:
-        response = ollama.chat(
+        response_text = llm_chat(
+            prompt=prompt,
             model=settings.LLM_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            options={
-                "num_predict": max_tokens or settings.LLM_MAX_TOKENS,
-                "temperature": settings.LLM_TEMPERATURE,
-            },
+            max_tokens=max_tokens or settings.LLM_MAX_TOKENS,
+            temperature=settings.LLM_TEMPERATURE,
         )
-        text = response["message"]["content"]
-        return _clean_think_tags(text)
+        return _clean_think_tags(response_text)
     except Exception as e:
-        logger.error("ollama_call_error", error=str(e), model=settings.LLM_MODEL)
+        logger.error("llm_call_error", error=str(e), provider=settings.LLM_PROVIDER, model=settings.LLM_MODEL)
         raise
 
 

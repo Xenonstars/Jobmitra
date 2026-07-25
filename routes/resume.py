@@ -26,10 +26,16 @@ class TailorResumeRequest(BaseModel):
 async def upload_resume(file: UploadFile = File(...)):
     """Upload and parse a resume file (PDF or DOCX)."""
 
-    if file.content_type not in [
+    # Accept by both MIME type and file extension
+    allowed_mimes = {
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ]:
+        "application/octet-stream",  # Streamlit often sends this
+    }
+    allowed_exts = {".pdf", ".docx"}
+    ext = os.path.splitext(file.filename)[1].lower()
+
+    if file.content_type not in allowed_mimes and ext not in allowed_exts:
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported")
 
     file_path = os.path.join(UPLOAD_DIR, file.filename)
@@ -197,7 +203,11 @@ async def generate_cover_letter(request: TailorResumeRequest):
 def _extract_text(file_path: str, content_type: str) -> str:
     """Extract text from PDF or DOCX."""
     try:
-        if "pdf" in content_type:
+        ext = os.path.splitext(file_path)[1].lower()
+        is_pdf = "pdf" in (content_type or "") or ext == ".pdf"
+        is_docx = "docx" in (content_type or "") or ext == ".docx"
+
+        if is_pdf:
             import pdfplumber
             text = ""
             with pdfplumber.open(file_path) as pdf:
@@ -206,10 +216,10 @@ def _extract_text(file_path: str, content_type: str) -> str:
                     if page_text:
                         text += page_text + "\n"
             return text.strip()
-        elif "docx" in content_type:
+        elif is_docx:
             import docx
             doc = docx.Document(file_path)
             return "\n".join(p.text for p in doc.paragraphs)
     except Exception as e:
-        logger.error("text_extraction_error", error=str(e))
+        logger.error("text_extraction_error", error=str(e), file_path=file_path, content_type=content_type)
     return ""

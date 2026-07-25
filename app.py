@@ -120,6 +120,8 @@ async def health_check() -> dict[str, Any]:
         "status": "healthy",
         "version": app.version,
         "environment": settings.ENVIRONMENT,
+        "llm_provider": settings.LLM_PROVIDER,
+        "llm_model": settings.LLM_MODEL,
     }
 
 

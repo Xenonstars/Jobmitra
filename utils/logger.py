@@ -1,10 +1,17 @@
 """Logging utilities."""
 
+import logging
 import structlog
 
 
-def setup_logging():
+def setup_logging(level: str = "DEBUG"):
     """Setup structured logging for the application."""
+    # Set up standard logging as the base
+    logging.basicConfig(
+        format="%(message)s",
+        level=getattr(logging, level.upper(), logging.DEBUG),
+    )
+
     structlog.configure(
         processors=[
             structlog.stdlib.filter_by_level,
@@ -15,9 +22,10 @@ def setup_logging():
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.dev.ConsoleRenderer() if True else structlog.processors.JSONRenderer(),
+            structlog.dev.ConsoleRenderer(),
         ],
         context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(),
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
