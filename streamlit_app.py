@@ -307,8 +307,10 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     items = ["🚀 Dashboard", "📋 Resume", "🔍 Search", "✅ Applications", "⚙️ Settings"]
-    sel = st.radio("Navigate", items, label_visibility="collapsed", index=items.index(st.session_state.page) if st.session_state.page in items else 0)
-    st.session_state.page = sel
+    if "page_radio" not in st.session_state:
+        st.session_state.page_radio = items[0]
+    st.radio("Navigate", items, key="page_radio", label_visibility="collapsed")
+    current_page = st.session_state.page_radio
 
     if not backend_ok:
         st.code("uvicorn app:app --reload", language="bash")
@@ -564,7 +566,7 @@ def page_resume():
         content = detail.get("content") or detail.get("content_preview") or ""
         if content:
             with st.expander("📄 Preview", expanded=True):
-                st.text_area("", content, height=300, label_visibility="collapsed")
+                st.text_area("Resume Content", content, height=300, label_visibility="collapsed")
         else:
             st.info("Resume uploaded, but no preview text could be extracted from this file.")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -581,24 +583,26 @@ def page_search():
 
     c1, c2 = st.columns(2)
     with c1:
-        kw = st.text_input("Keywords (comma-separated)", "Senior Engineer, Python")
+        kw = st.text_input("Keywords (comma-separated)", "Python Developer")
     with c2:
-        loc = st.text_input("Location", "Remote")
+        loc = st.text_input("Location", "India")
 
-    c1, c2, c3 = st.columns(3)
-    indeed = c1.checkbox("Indeed", True)
-    linkedin = c2.checkbox("LinkedIn", False)
-    limit = c3.number_input("Max", 5, 50, 20)
+    c1, c2, c3, c4 = st.columns(4)
+    remotive = c1.checkbox("🌍 Remotive", True)
+    naukri = c2.checkbox("🇮🇳 Naukri", True)
+    indeed = c3.checkbox("🔍 Indeed", False)
+    limit = c4.number_input("Max", 5, 50, 20)
     st.markdown("</div>", unsafe_allow_html=True)
 
     if st.button("🔍 Search", use_container_width=True):
         kws = [k.strip() for k in kw.split(",") if k.strip()]
         if not kws: return st.error("Enter keywords")
         sources = []
+        if remotive: sources.append("remotive")
+        if naukri: sources.append("naukri")
         if indeed: sources.append("indeed")
-        if linkedin: sources.append("linkedin")
 
-        with st.spinner("Crawling job boards..."):
+        with st.spinner("Searching job boards..."):
             r = api_post("/jobs/search", {"keywords": kws, "location": loc, "limit": limit, "sources": sources})
         st.session_state.jobs = r.get("jobs", [])
         st.success(f"Found {r.get('jobs_found',0)} jobs ({r.get('jobs_saved',0)} new)")
@@ -691,6 +695,61 @@ def page_settings():
     else:
         st.code("ollama list")
     st.markdown("---")
+
+    st.markdown("### 🔐 Job Site Sign-In")
+    st.caption("Click a button to open a visible browser. Sign in manually — your session will be saved for automated searches.")
+
+    # Check auth status
+    try:
+        auth_resp = requests.get(f"{API_BASE}/api/auth/status", timeout=5).json()
+    except Exception:
+        auth_resp = {}
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        linkedin_ok = auth_resp.get("linkedin", False)
+        label = "🔓 LinkedIn Signed In" if linkedin_ok else "🔐 Sign in to LinkedIn"
+        if st.button(label, key="auth_linkedin", use_container_width=True, type="primary" if not linkedin_ok else "secondary"):
+            with st.spinner("Launching browser for LinkedIn login..."):
+                try:
+                    r = requests.post(f"{API_BASE}/api/auth/browser/linkedin", timeout=370)
+                    if r.json().get("cookies_saved"):
+                        st.success("✅ LinkedIn session saved!")
+                        st.rerun()
+                    else:
+                        st.warning("⚠️ No cookies captured — try again")
+                except Exception as e:
+                    st.error(f"Auth failed: {e}")
+    with col2:
+        naukri_ok = auth_resp.get("naukri", False)
+        label = "🔓 Naukri Signed In" if naukri_ok else "🔐 Sign in to Naukri"
+        if st.button(label, key="auth_naukri", use_container_width=True, type="primary" if not naukri_ok else "secondary"):
+            with st.spinner("Launching browser for Naukri login..."):
+                try:
+                    r = requests.post(f"{API_BASE}/api/auth/browser/naukri", timeout=370)
+                    if r.json().get("cookies_saved"):
+                        st.success("✅ Naukri session saved!")
+                        st.rerun()
+                    else:
+                        st.warning("⚠️ No cookies captured — try again")
+                except Exception as e:
+                    st.error(f"Auth failed: {e}")
+    with col3:
+        indeed_ok = auth_resp.get("indeed", False)
+        label = "🔓 Indeed Signed In" if indeed_ok else "🔐 Sign in to Indeed"
+        if st.button(label, key="auth_indeed", use_container_width=True, type="primary" if not indeed_ok else "secondary"):
+            with st.spinner("Launching browser for Indeed login..."):
+                try:
+                    r = requests.post(f"{API_BASE}/api/auth/browser/indeed", timeout=370)
+                    if r.json().get("cookies_saved"):
+                        st.success("✅ Indeed session saved!")
+                        st.rerun()
+                    else:
+                        st.warning("⚠️ No cookies captured — try again")
+                except Exception as e:
+                    st.error(f"Auth failed: {e}")
+
+    st.markdown("---")
     st.markdown("### ⚙️ Preferences")
     c1, c2 = st.columns(2)
     c1.slider("Max applications/day", 1, 50, 10)
@@ -708,7 +767,7 @@ pages = {
     "⚙️ Settings": page_settings,
 }
 
-pages.get(st.session_state.page, lambda: None)()
+pages.get(current_page, lambda: None)()
 
 st.markdown("""
 <div style="text-align:center;padding:1rem;color:rgba(255,255,255,0.2);font-size:0.75rem">

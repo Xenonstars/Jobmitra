@@ -137,6 +137,51 @@ async def readiness_check() -> dict[str, Any]:
 
 
 # =====================
+# Browser Auth Endpoint
+# =====================
+
+
+@app.post("/api/auth/browser/{site}", tags=["Auth"])
+async def launch_auth_browser(site: str) -> dict[str, Any]:
+    """
+    Launch a visible Chrome browser so the user can manually sign in.
+    Cookies are saved and reused by headless crawlers.
+
+    Supported sites: linkedin, naukri, indeed
+    """
+    from browser_auth import launch_auth_browser, SITE_URLS
+
+    if site not in SITE_URLS:
+        raise HTTPException(status_code=400, detail=f"Unsupported site: {site}. Options: {list(SITE_URLS.keys())}")
+
+    import asyncio as aio
+    try:
+        result = await aio.wait_for(launch_auth_browser(site), timeout=360)
+        return {
+            "status": "ok" if result else "no_cookies",
+            "site": site,
+            "cookies_saved": result,
+        }
+    except aio.TimeoutError:
+        return {
+            "status": "timeout",
+            "site": site,
+            "message": "Auth browser timed out after 6 minutes",
+        }
+
+
+@app.get("/api/auth/status", tags=["Auth"])
+async def auth_status() -> dict[str, Any]:
+    """Check which sites have saved auth cookies."""
+    from browser_auth import has_cookies, SITE_URLS
+
+    return {
+        site: has_cookies(site)
+        for site in SITE_URLS
+    }
+
+
+# =====================
 # Route Registration
 # =====================
 

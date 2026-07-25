@@ -8,7 +8,10 @@ import structlog
 
 from db import Job, Resume
 from db.session import async_session
-from job_discovery_service import IndeedCrawler, LinkedInCrawler, JobListing
+from job_discovery_service import (
+    IndeedCrawler, LinkedInCrawler, NaukriCrawler,
+    RemotiveCrawler, ArbeitnowCrawler, JobListing
+)
 from llm_service import JobMatchingService, ResumeTailoringService
 from config import settings
 
@@ -18,9 +21,9 @@ router = APIRouter()
 
 class JobSearchRequest(BaseModel):
     keywords: list[str]
-    location: str = "Remote"
+    location: str = "India"
     limit: int = 20
-    sources: list[str] = ["indeed"]
+    sources: list[str] = ["remotive", "naukri"]
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
     remote_only: bool = True
@@ -116,10 +119,16 @@ async def search_jobs(request: JobSearchRequest):
     all_jobs: list[JobListing] = []
     crawlers = []
 
+    if "remotive" in request.sources:
+        crawlers.append(RemotiveCrawler().search(request.keywords, request.location, request.limit))
+    if "arbeitnow" in request.sources:
+        crawlers.append(ArbeitnowCrawler().search(request.keywords, request.location, request.limit))
     if "indeed" in request.sources:
         crawlers.append(IndeedCrawler().search(request.keywords, request.location, request.limit))
     if "linkedin" in request.sources and settings.ENABLE_LINKEDIN_APPLY:
         crawlers.append(LinkedInCrawler().search(request.keywords, request.location, request.limit))
+    if "naukri" in request.sources and settings.ENABLE_NAUKRI_APPLY:
+        crawlers.append(NaukriCrawler().search(request.keywords, request.location, request.limit))
 
     if not crawlers:
         raise HTTPException(status_code=400, detail="No valid job sources selected")

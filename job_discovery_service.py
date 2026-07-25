@@ -126,7 +126,7 @@ PAGE TEXT:
         return result
 
     async def _create_browser(self) -> Browser:
-        """Create Playwright browser instance"""
+        """Create Playwright browser instance with stealth anti-detection"""
         playwright = await async_playwright().start()
         browser = await playwright.chromium.launch(
             headless=True,
@@ -134,9 +134,47 @@ PAGE TEXT:
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
+                "--disable-blink-features=AutomationControlled",
             ],
         )
         return browser
+
+    async def _setup_stealth_page(self, browser: Browser):
+        """Create a page with stealth headers to avoid bot detection"""
+        page = await browser.new_page()
+        await page.set_extra_http_headers({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        })
+        return page
+
+    async def _setup_stealth_context(self, browser: Browser):
+        """
+        Create a browser context with saved auth cookies (if available)
+        and stealth headers. Returns (context, page).
+        """
+        from browser_auth import load_cookies
+
+        cookies = load_cookies(self.name) if hasattr(self, "name") else []
+
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            locale="en-US",
+        )
+
+        if cookies:
+            await context.add_cookies(cookies)
+            logger.info("auth_cookies_loaded", site=self.name, count=len(cookies))
+
+        page = await context.new_page()
+        await page.set_extra_http_headers({
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        })
+        return context, page
 
     async def _normalize_salary(self, salary_str: str) -> tuple[Optional[float], Optional[float]]:
         """Extract min/max salary from string like '$50k - $70k'"""
@@ -165,29 +203,32 @@ PAGE TEXT:
 
 
 class IndeedCrawler(BaseJobCrawler):
-    """Indeed.com job crawler"""
+    """Indeed job crawler — uses India domain by default"""
 
     name = "indeed"
 
     async def search(
         self, keywords: List[str], location: str, limit: int = 20
     ) -> List[JobListing]:
-        """Scrape jobs from Indeed"""
+        """Scrape jobs from Indeed India"""
+        import asyncio as asyncio_mod
+
         jobs = []
         browser = None
 
         try:
             browser = await self._create_browser()
-            page = await browser.new_page()
+            context, page = await self._setup_stealth_context(browser)
 
-            # Build search URL
+            # Build search URL — use .co.in for India
             query = "+".join(keywords)
-            url = f"https://www.indeed.com/jobs?q={query}&l={location}&start=0&limit={limit}"
+            url = f"https://www.indeed.co.in/jobs?q={query}&l={location}&start=0&limit={limit}"
 
             logger.info("indeed_search", query=query, location=location, url=url)
 
             await page.goto(url, wait_until="networkidle", timeout=self.timeout * 1000)
             await page.wait_for_load_state("networkidle")
+            await asyncio_mod.sleep(3)  # Wait for JS-rendered cards
 
             # Find job listings
             job_cards = await page.query_selector_all("div.job_seen_beacon")
@@ -252,7 +293,7 @@ class IndeedCrawler(BaseJobCrawler):
 
 
 class LinkedInCrawler(BaseJobCrawler):
-    """LinkedIn job crawler (authenticated)"""
+    """LinkedIn job crawler (requires authentication + session cookies)"""
 
     name = "linkedin"
 
@@ -260,12 +301,14 @@ class LinkedInCrawler(BaseJobCrawler):
         self, keywords: List[str], location: str, limit: int = 20
     ) -> List[JobListing]:
         """Scrape jobs from LinkedIn (requires authentication)"""
+        import asyncio as asyncio_mod
+
         jobs = []
         browser = None
 
         try:
             browser = await self._create_browser()
-            page = await browser.new_page()
+            context, page = await self._setup_stealth_context(browser)
 
             # Build LinkedIn jobs URL
             query = "-".join(keywords)
@@ -273,13 +316,8 @@ class LinkedInCrawler(BaseJobCrawler):
 
             logger.info("linkedin_search", query=query, location=location)
 
-            # Note: LinkedIn requires login. In production, use stored session cookies
-            # For now, this is a template for authenticated scraping
-
             await page.goto(url, wait_until="networkidle", timeout=self.timeout * 1000)
-
-            # Wait for job listings
-            await page.wait_for_selector("ul.jobs-search__results-list", timeout=10000)
+            await asyncio_mod.sleep(3)
 
             # Parse job cards
             job_cards = await page.query_selector_all(
@@ -334,7 +372,7 @@ class LinkedInCrawler(BaseJobCrawler):
 
 
 class NaukriCrawler(BaseJobCrawler):
-    """Naukri.com job crawler"""
+    """Naukri.com job crawler — updated selectors + stealth"""
 
     name = "naukri"
 
@@ -342,34 +380,37 @@ class NaukriCrawler(BaseJobCrawler):
         self, keywords: List[str], location: str, limit: int = 20
     ) -> List[JobListing]:
         """Scrape jobs from Naukri.com"""
+        import asyncio as asyncio_mod
+
         jobs = []
         browser = None
 
         try:
             browser = await self._create_browser()
-            page = await browser.new_page()
+            context, page = await self._setup_stealth_context(browser)
 
-            # Build Naukri search URL
-            query = "%20".join(keywords)
-            location_param = location.replace(" ", "%20")
-            url = f"https://www.naukri.com/jobs?k={query}&l={location_param}"
+            # Build Naukri search URL — try slug-based format
+            query_slug = "-".join(k.lower() for k in keywords)
+            location_slug = location.replace(" ", "-").lower()
+            url = f"https://www.naukri.com/{query_slug}-jobs-in-{location_slug}"
 
-            logger.info("naukri_search", keywords=keywords, location=location)
+            logger.info("naukri_search", keywords=keywords, location=location, url=url)
 
             await page.goto(url, wait_until="networkidle", timeout=self.timeout * 1000)
             await page.wait_for_load_state("networkidle")
+            await asyncio_mod.sleep(3)  # Wait for JS-rendered cards
 
-            # Find job listings
-            job_cards = await page.query_selector_all("div.srp-jobtuple-wrapper")
+            # Updated selectors (fallback chain for Naukri's frequently-changing DOM)
+            job_cards = await page.query_selector_all(
+                "div.srp-jobtuple-wrapper, div.jobTuple, article.jobTuple, div.cust-job-tuple"
+            )
 
             for idx, card in enumerate(job_cards[:limit]):
                 try:
-                    # Naukri specific selectors
-                    title_elem = await card.query_selector("a.title")
-                    company_elem = await card.query_selector("a.comp-name")
-                    location_elem = await card.query_selector("span.locWc")
-                    exp_elem = await card.query_selector("span.expwc")
-                    salary_elem = await card.query_selector("span.salaryText")
+                    title_elem = await card.query_selector("a.title, a.jobTitle, h2 a, a[class*='title']")
+                    company_elem = await card.query_selector("a.comp-name, a.companyName, div.companyInfo a, a[class*='comp']")
+                    location_elem = await card.query_selector("span.locWdth, span.location, div.jobLocation, span[class*='loc']")
+                    salary_elem = await card.query_selector("span.sal, span.salary, div.salary, span[class*='sal']")
 
                     title = await title_elem.text_content() if title_elem else ""
                     company = (
@@ -413,11 +454,106 @@ class NaukriCrawler(BaseJobCrawler):
         return jobs
 
 
+class RemotiveCrawler(BaseJobCrawler):
+    """Remotive.com — free remote job board API (no auth required)"""
+
+    name = "remotive"
+
+    async def search(
+        self, keywords: List[str], location: str, limit: int = 20
+    ) -> List[JobListing]:
+        import requests
+
+        jobs = []
+        try:
+            query = " ".join(keywords)
+            url = f"https://remotive.com/api/remote-jobs?search={query}&limit={min(limit, 50)}"
+            logger.info("remotive_search", query=query, url=url)
+
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+
+            for item in data.get("jobs", [])[:limit]:
+                jobs.append(JobListing(
+                    title=item.get("title", ""),
+                    company=item.get("company_name", ""),
+                    location=item.get("candidate_required_location", "Remote"),
+                    description=item.get("description", "")[:2000],
+                    url=item.get("url", ""),
+                    salary_min=None,
+                    salary_max=None,
+                    source=self.name,
+                    job_type=item.get("job_type", ""),
+                    remote_friendly=True,
+                ))
+
+            logger.info("remotive_complete", jobs_found=len(jobs))
+
+        except Exception as e:
+            logger.error("remotive_crawler_error", error=str(e))
+
+        return jobs
+
+
+class ArbeitnowCrawler(BaseJobCrawler):
+    """Arbeitnow.com — free job board API (no auth required, EU-focused)"""
+
+    name = "arbeitnow"
+
+    async def search(
+        self, keywords: List[str], location: str, limit: int = 20
+    ) -> List[JobListing]:
+        import requests
+
+        jobs = []
+        try:
+            url = "https://www.arbeitnow.com/api/job-board-api"
+            logger.info("arbeitnow_search", url=url)
+
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+
+            # Filter by keyword match in title
+            query_terms = set(k.lower() for k in keywords)
+            matched = []
+            for item in data.get("data", []):
+                title = (item.get("title") or "").lower()
+                if any(term in title for term in query_terms):
+                    matched.append(item)
+                if len(matched) >= limit:
+                    break
+
+            for item in matched:
+                jobs.append(JobListing(
+                    title=item.get("title", ""),
+                    company=item.get("company_name", ""),
+                    location=item.get("location", ""),
+                    description=item.get("description", "")[:2000],
+                    url=item.get("url", ""),
+                    salary_min=None,
+                    salary_max=None,
+                    source=self.name,
+                    job_type=",".join(item.get("job_types", [])) if item.get("job_types") else None,
+                    remote_friendly=item.get("remote", False),
+                ))
+
+            logger.info("arbeitnow_complete", jobs_found=len(jobs))
+
+        except Exception as e:
+            logger.error("arbeitnow_crawler_error", error=str(e))
+
+        return jobs
+
+
 class JobDiscoveryService:
     """Orchestrator for multi-source job discovery"""
 
     def __init__(self):
         self.crawlers = {
+            "remotive": RemotiveCrawler(),
+            "arbeitnow": ArbeitnowCrawler(),
             "indeed": IndeedCrawler(),
             "linkedin": LinkedInCrawler(),
             "naukri": NaukriCrawler(),
@@ -493,6 +629,8 @@ class JobDiscoveryService:
 __all__ = [
     "JobListing",
     "BaseJobCrawler",
+    "RemotiveCrawler",
+    "ArbeitnowCrawler",
     "IndeedCrawler",
     "LinkedInCrawler",
     "NaukriCrawler",
